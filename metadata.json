@@ -1,0 +1,5 @@
+{
+  "name": "PromptMaster Extension",
+  "description": "A powerful React interface for a Chrome Extension that generates and refines AI prompts using Google Gemini.",
+  "requestFramePermissions": []
+}

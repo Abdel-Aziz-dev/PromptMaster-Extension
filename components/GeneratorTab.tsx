@@ -22,8 +22,8 @@ interface GeneratorFormState {
 }
 
 const MODELS = [
-  { id: 'gemini-2.5-flash', name: '⚡ Flash (Fast)', description: 'Best for speed and simple tasks' },
-  { id: 'gemini-3-pro-preview', name: '🧠 Pro (Smart)', description: 'Best for complex reasoning & creativity' }
+  { id: 'gemini-2.5-flash', name: '⚡ Flash', description: 'Fast & Efficient' },
+  { id: 'gemini-3-pro-preview', name: '🧠 Pro', description: 'Deep Reasoning' }
 ];
 
 const EXAMPLES = [
@@ -147,7 +147,7 @@ const GeneratorTab: React.FC<GeneratorTabProps> = ({ onSavePrompt }) => {
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 160)}px`;
+      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 120)}px`;
     }
   }, [formState.context]);
 
@@ -188,7 +188,6 @@ const GeneratorTab: React.FC<GeneratorTabProps> = ({ onSavePrompt }) => {
 
     setIsSaving(true);
     const timer = setTimeout(() => {
-      // Don't save grounding chunks to draft to avoid bloat, just the inputs
       const { groundingChunks, ...stateToSave } = formState;
       localStorage.setItem('prompt_master_generator_draft', JSON.stringify(stateToSave));
       setLastSaved(new Date());
@@ -319,15 +318,64 @@ const GeneratorTab: React.FC<GeneratorTabProps> = ({ onSavePrompt }) => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [formState, loading, undo, redo, isSaveModalOpen]);
 
-  // Handle model switching effects (disable search if PRO, enable thinking if PRO)
   const isThinkingMode = formState.model === 'gemini-3-pro-preview';
 
   return (
-    <div className="p-1 h-full flex flex-col relative">
-      <div className="space-y-4">
-        {/* Header Toolbar */}
-        <div className="flex justify-between items-center">
-           <div id="gen-model-selector" className="flex bg-gray-100 dark:bg-slate-800 p-0.5 rounded-lg">
+    <div className="flex flex-col h-full relative space-y-3 pb-4">
+        
+        {/* TOP CONTROL BAR */}
+        <div className="flex justify-between items-center bg-gray-50 dark:bg-slate-800/50 p-1 rounded-lg border border-gray-100 dark:border-slate-800">
+           {/* Undo/Redo Group */}
+           <div className="flex items-center space-x-0.5">
+              <button onClick={undo} disabled={!canUndo} title="Undo (Ctrl+Z)" className="p-1.5 text-gray-500 hover:text-brand-600 dark:hover:text-brand-400 disabled:opacity-30 transition-colors rounded hover:bg-white dark:hover:bg-slate-700">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>
+              </button>
+              <button onClick={redo} disabled={!canRedo} title="Redo (Ctrl+Y)" className="p-1.5 text-gray-500 hover:text-brand-600 dark:hover:text-brand-400 disabled:opacity-30 transition-colors rounded hover:bg-white dark:hover:bg-slate-700">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 7v6h-6"/><path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3l3 2.7"/></svg>
+              </button>
+           </div>
+
+           {/* Save Status & Clear */}
+           <div className="flex items-center space-x-3">
+              <div className="text-[10px] text-gray-400 dark:text-gray-500 font-medium transition-opacity duration-300">
+                {isSaving ? (
+                  <span className="flex items-center"><span className="w-1.5 h-1.5 bg-brand-500 rounded-full animate-pulse mr-1"></span> Saving...</span>
+                ) : lastSaved ? (
+                  <span>Saved {lastSaved.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                ) : null}
+              </div>
+              <button onClick={handleClear} className="px-2 py-1 rounded-md text-[10px] font-semibold text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all">
+                {t('generator.clear')}
+              </button>
+           </div>
+        </div>
+        
+        {/* ENGINE SELECTOR & FEATURES */}
+        <div id="gen-model-selector" className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl p-2 shadow-sm">
+           <div className="flex justify-between items-center mb-2">
+             <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider pl-1">AI Engine</span>
+             {isThinkingMode ? (
+                <div className="flex items-center text-[10px] font-bold text-indigo-600 dark:text-indigo-400 animate-pulse bg-indigo-50 dark:bg-indigo-900/20 px-1.5 py-0.5 rounded">
+                  <svg className="w-3 h-3 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a8 8 0 0 1 8 8c0 1.5-.4 3-1.1 4.2l.7 2.2a1 1 0 0 1-1.3 1.2l-2.3-.7C14.8 18.2 13.4 18.7 12 18.7a8.7 8.7 0 1 1 0-17.4z"/></svg>
+                  Thinking Mode
+                </div>
+             ) : (
+                <label className="flex items-center cursor-pointer group px-1.5 py-0.5 rounded hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors">
+                  <input 
+                    type="checkbox" 
+                    checked={formState.useSearch} 
+                    onChange={(e) => updateForm({ ...formState, useSearch: e.target.checked })}
+                    className="w-3 h-3 rounded border-gray-300 text-brand-600 focus:ring-brand-500 transition-colors cursor-pointer"
+                  />
+                  <span className="ml-1.5 text-[10px] font-medium text-gray-500 dark:text-gray-400 group-hover:text-brand-600 dark:group-hover:text-brand-400 flex items-center">
+                    <svg className="w-3 h-3 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    Search Grounding
+                  </span>
+                </label>
+             )}
+           </div>
+
+           <div className="grid grid-cols-2 gap-1 bg-gray-100 dark:bg-slate-700/50 p-1 rounded-lg">
               {MODELS.map(m => (
                 <button
                   key={m.id}
@@ -335,130 +383,75 @@ const GeneratorTab: React.FC<GeneratorTabProps> = ({ onSavePrompt }) => {
                     const newUseSearch = m.id === 'gemini-3-pro-preview' ? false : formState.useSearch;
                     updateForm({ ...formState, model: m.id, useSearch: newUseSearch });
                   }}
-                  title={m.description}
-                  className={`px-3 py-1 text-[10px] font-medium rounded-md transition-all ${
+                  className={`flex flex-col items-center justify-center py-1.5 px-2 rounded-md transition-all duration-200 ${
                     formState.model === m.id
-                      ? 'bg-white dark:bg-slate-600 text-brand-600 dark:text-brand-300 shadow-sm'
-                      : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                      ? 'bg-white dark:bg-slate-600 text-brand-600 dark:text-brand-300 shadow-sm ring-1 ring-black/5 dark:ring-white/10'
+                      : 'text-gray-500 dark:text-gray-400 hover:bg-gray-200/50 dark:hover:bg-slate-600/50'
                   }`}
                 >
-                  {m.name}
+                  <span className="text-xs font-bold">{m.name}</span>
+                  <span className="text-[9px] opacity-70">{m.description}</span>
                 </button>
               ))}
            </div>
-           
-           <div className="flex space-x-1 items-center">
-              <div className="mr-3 text-[10px] text-gray-400 dark:text-gray-500 font-medium transition-opacity duration-300">
-                {isSaving ? (
-                  <span className="animate-pulse">Saving...</span>
-                ) : lastSaved ? (
-                  <span>Saved {lastSaved.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
-                ) : null}
-              </div>
-
-              <div className="flex items-center space-x-0.5">
-                <button onClick={undo} disabled={!canUndo} title="Undo (Ctrl+Z)" className="p-1.5 text-gray-400 hover:text-brand-600 dark:hover:text-brand-400 disabled:opacity-30 transition-colors">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/></svg>
-                </button>
-                <button onClick={redo} disabled={!canRedo} title="Redo (Ctrl+Y)" className="p-1.5 text-gray-400 hover:text-brand-600 dark:hover:text-brand-400 disabled:opacity-30 transition-colors">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 7v6h-6"/><path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3l3 2.7"/></svg>
-                </button>
-              </div>
-              <div className="w-px bg-gray-200 dark:bg-slate-700 mx-1 h-4"></div>
-              <button onClick={handleClear} className="text-[10px] font-medium text-gray-400 hover:text-red-500 transition-colors">
-                {t('generator.clear')}
-              </button>
-           </div>
         </div>
-        
-        {/* Advanced Features Bar */}
-        <div className="flex items-center space-x-4 bg-gray-50 dark:bg-slate-800/50 p-2 rounded-lg border border-gray-100 dark:border-slate-700/50">
-           {isThinkingMode ? (
-              <div className="flex items-center text-[10px] font-bold text-indigo-600 dark:text-indigo-400 animate-pulse">
-                <svg className="w-3 h-3 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2a8 8 0 0 1 8 8c0 1.5-.4 3-1.1 4.2l.7 2.2a1 1 0 0 1-1.3 1.2l-2.3-.7C14.8 18.2 13.4 18.7 12 18.7a8.7 8.7 0 1 1 0-17.4z"/></svg>
-                Thinking Mode (3.0 Pro)
-              </div>
-           ) : (
-              <label className="flex items-center cursor-pointer group">
-                <input 
-                  type="checkbox" 
-                  checked={formState.useSearch} 
-                  onChange={(e) => updateForm({ ...formState, useSearch: e.target.checked })}
-                  className="w-3.5 h-3.5 rounded border-gray-300 text-brand-600 focus:ring-brand-500 transition-colors cursor-pointer"
-                />
-                <span className="ml-1.5 text-[10px] font-medium text-gray-600 dark:text-gray-300 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors flex items-center">
-                  <svg className="w-3 h-3 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                  Google Search Grounding
-                </span>
+
+        {/* INPUT CARD */}
+        <div className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl shadow-sm overflow-hidden group focus-within:ring-1 focus-within:ring-brand-500/50 focus-within:border-brand-500/50 transition-all">
+            {/* Task Input */}
+            <div id="gen-task-input" className="p-3 border-b border-gray-100 dark:border-slate-700 relative">
+              <label className="block text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">
+                {t('generator.coreTask')} <span className="text-red-500">*</span>
               </label>
-           )}
-           <span className="flex-1"></span>
-           <span className="text-[10px] text-gray-400">
-             {isThinkingMode ? "Reasoning Budget: 32k" : "Low Latency"}
-           </span>
-        </div>
-
-        {/* Task Input */}
-        <div id="gen-task-input">
-          <div className="flex justify-between items-center mb-1">
-            <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300">
-              {t('generator.coreTask')} <span className="text-red-500">*</span>
-            </label>
-            <span className="text-[10px] text-gray-400">{formState.task.length} chars</span>
-          </div>
-          <input
-            type="text"
-            className={`w-full p-2.5 border bg-white dark:bg-slate-800 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:border-transparent outline-none transition-all placeholder-gray-400 dark:placeholder-gray-500 shadow-sm ${
-              error 
-                ? 'border-red-500 focus:ring-red-500' 
-                : 'border-gray-300 dark:border-slate-600 focus:ring-brand-500'
-            }`}
-            placeholder={t('generator.placeholders.task')}
-            value={formState.task}
-            onChange={(e) => {
-              updateForm({ ...formState, task: e.target.value });
-              if (error) setError('');
-            }}
-          />
-        </div>
-
-        {/* Context Input */}
-        <div id="gen-context-input">
-           <div className="flex justify-between items-center mb-1">
-            <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300">
-              {t('generator.context')}
-            </label>
-            <span className="text-[10px] text-gray-400">{formState.context.length} chars</span>
-          </div>
-          <textarea
-            ref={textareaRef}
-            className="w-full p-2.5 border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-brand-500 focus:border-transparent outline-none transition-all min-h-[80px] resize-none placeholder-gray-400 dark:placeholder-gray-500 shadow-sm overflow-hidden"
-            placeholder={t('generator.placeholders.context')}
-            value={formState.context}
-            onChange={(e) => updateForm({ ...formState, context: e.target.value })}
-          />
-          
-          {/* Prompt Strength Meter */}
-          <div className="mt-2 flex items-center space-x-2">
-            <div className="flex-1 h-1.5 bg-gray-100 dark:bg-slate-700 rounded-full overflow-hidden">
-              <div 
-                className={`h-full transition-all duration-500 ease-out ${strengthInfo.color}`} 
-                style={{ width: `${promptStrength}%` }}
-              ></div>
+              <input
+                type="text"
+                className={`w-full text-sm font-medium text-gray-900 dark:text-gray-100 bg-transparent outline-none placeholder-gray-300 dark:placeholder-gray-600 ${error ? 'placeholder-red-300' : ''}`}
+                placeholder={t('generator.placeholders.task')}
+                value={formState.task}
+                onChange={(e) => {
+                  updateForm({ ...formState, task: e.target.value });
+                  if (error) setError('');
+                }}
+              />
+              {/* Strength Meter Line */}
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gray-100 dark:bg-slate-700">
+                <div 
+                  className={`h-full transition-all duration-500 ease-out ${strengthInfo.color}`} 
+                  style={{ width: `${promptStrength}%` }}
+                ></div>
+              </div>
             </div>
-            <span className={`text-[10px] font-bold uppercase tracking-wider ${strengthInfo.text} w-12 text-right`}>
-              {strengthInfo.label}
-            </span>
-          </div>
+
+            {/* Context Input */}
+            <div id="gen-context-input" className="p-3 bg-gray-50/50 dark:bg-slate-800/50">
+               <div className="flex justify-between items-center mb-1">
+                <label className="block text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
+                  {t('generator.context')}
+                </label>
+                <div className="flex items-center space-x-2">
+                   <span className={`text-[9px] font-bold uppercase ${strengthInfo.text} bg-white dark:bg-slate-700 px-1.5 rounded border border-gray-100 dark:border-slate-600 shadow-sm`}>
+                      {strengthInfo.label}
+                   </span>
+                   <span className="text-[9px] text-gray-400">{formState.context.length} chars</span>
+                </div>
+              </div>
+              <textarea
+                ref={textareaRef}
+                className="w-full text-xs text-gray-700 dark:text-gray-300 bg-transparent outline-none min-h-[60px] resize-none placeholder-gray-400 dark:placeholder-gray-600 leading-relaxed"
+                placeholder={t('generator.placeholders.context')}
+                value={formState.context}
+                onChange={(e) => updateForm({ ...formState, context: e.target.value })}
+              />
+            </div>
         </div>
 
-        {/* Configuration Grid */}
+        {/* FINE TUNING GRID */}
         <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="block text-[10px] font-bold text-gray-500 dark:text-gray-400 mb-1 uppercase tracking-wider">{t('generator.tone')}</label>
+          <div className="space-y-1">
+            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider pl-1">{t('generator.tone')}</label>
             <div className="relative">
               <select
-                className="w-full appearance-none p-2 bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-600 text-gray-900 dark:text-gray-100 rounded-lg text-xs font-medium focus:ring-2 focus:ring-brand-500 outline-none cursor-pointer hover:border-brand-400 transition-colors"
+                className="w-full appearance-none py-2 px-3 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-gray-700 dark:text-gray-200 rounded-lg text-xs font-medium focus:ring-1 focus:ring-brand-500 outline-none cursor-pointer hover:border-brand-300 dark:hover:border-slate-500 transition-colors shadow-sm"
                 value={formState.tone}
                 onChange={(e) => updateForm({ ...formState, tone: e.target.value as Tone }, true)}
               >
@@ -471,11 +464,11 @@ const GeneratorTab: React.FC<GeneratorTabProps> = ({ onSavePrompt }) => {
               </div>
             </div>
           </div>
-          <div>
-            <label className="block text-[10px] font-bold text-gray-500 dark:text-gray-400 mb-1 uppercase tracking-wider">{t('generator.format')}</label>
+          <div className="space-y-1">
+            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider pl-1">{t('generator.format')}</label>
             <div className="relative">
               <select
-                className="w-full appearance-none p-2 bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-600 text-gray-900 dark:text-gray-100 rounded-lg text-xs font-medium focus:ring-2 focus:ring-brand-500 outline-none cursor-pointer hover:border-brand-400 transition-colors"
+                className="w-full appearance-none py-2 px-3 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-gray-700 dark:text-gray-200 rounded-lg text-xs font-medium focus:ring-1 focus:ring-brand-500 outline-none cursor-pointer hover:border-brand-300 dark:hover:border-slate-500 transition-colors shadow-sm"
                 value={formState.format}
                 onChange={(e) => updateForm({ ...formState, format: e.target.value as OutputFormat }, true)}
               >
@@ -490,50 +483,51 @@ const GeneratorTab: React.FC<GeneratorTabProps> = ({ onSavePrompt }) => {
           </div>
         </div>
         
-        {/* Templates Dropdown */}
-        <div id="gen-templates">
-          <label className="block text-[10px] font-bold text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-wider">
+        {/* TEMPLATES (SCROLLABLE) */}
+        <div id="gen-templates" className="relative">
+          <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1.5 pl-1">
             {t('generator.templates')}
           </label>
-          <div className="flex flex-wrap gap-1.5">
-            {EXAMPLES.slice(0, 6).map((ex, idx) => (
-              <button
-                key={idx}
-                onClick={() => applyExample(ex)}
-                className="px-2 py-1 text-[10px] bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 hover:border-brand-300 dark:hover:border-brand-700 hover:text-brand-600 dark:hover:text-brand-400 rounded-md transition-all text-gray-600 dark:text-gray-300 whitespace-nowrap"
-              >
-                {ex.label}
-              </button>
-            ))}
+          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide mask-fade-right">
              <button
                 onClick={() => {
                    const random = EXAMPLES[Math.floor(Math.random() * EXAMPLES.length)];
                    applyExample(random);
                 }}
-                className="px-2 py-1 text-[10px] bg-brand-50 dark:bg-brand-900/20 border border-brand-100 dark:border-brand-900/50 text-brand-600 dark:text-brand-400 rounded-md hover:bg-brand-100 transition-all"
+                className="flex-shrink-0 px-2.5 py-1.5 text-[10px] font-bold bg-brand-50 dark:bg-brand-900/20 border border-brand-100 dark:border-brand-900/50 text-brand-600 dark:text-brand-400 rounded-md hover:bg-brand-100 transition-all shadow-sm active:scale-95"
               >
                 🎲 Random
               </button>
+            {EXAMPLES.slice(0, 8).map((ex, idx) => (
+              <button
+                key={idx}
+                onClick={() => applyExample(ex)}
+                className="flex-shrink-0 px-2.5 py-1.5 text-[10px] bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 hover:border-brand-300 dark:hover:border-brand-600 hover:text-brand-600 dark:hover:text-brand-400 rounded-md transition-all text-gray-600 dark:text-gray-300 whitespace-nowrap shadow-sm active:scale-95"
+              >
+                {ex.label}
+              </button>
+            ))}
           </div>
         </div>
 
         {error && (
-           <div className="p-2 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/50 rounded text-xs text-red-600 dark:text-red-400 flex items-center">
-             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+           <div className="p-2.5 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/50 rounded-lg text-xs font-medium text-red-600 dark:text-red-400 flex items-center animate-in fade-in slide-in-from-top-2">
+             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 shrink-0"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
              {error}
            </div>
         )}
 
+        {/* GENERATE BUTTON */}
         <button
           id="gen-generate-btn"
           onClick={handleGenerate}
           disabled={loading}
           title="Ctrl + Enter"
-          className="w-full bg-brand-600 hover:bg-brand-700 dark:bg-brand-600 dark:hover:bg-brand-700 text-white font-medium py-2.5 rounded-lg transition-all flex items-center justify-center shadow-md shadow-brand-200 dark:shadow-none disabled:opacity-70 disabled:cursor-not-allowed transform active:scale-[0.99]"
+          className="w-full bg-gradient-to-r from-brand-600 to-brand-700 hover:from-brand-500 hover:to-brand-600 text-white font-bold py-3 rounded-xl transition-all flex items-center justify-center shadow-lg shadow-brand-500/20 hover:shadow-brand-500/40 transform hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
         >
           {loading ? (
             <div className="flex items-center space-x-2">
-               <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+               <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
@@ -541,7 +535,7 @@ const GeneratorTab: React.FC<GeneratorTabProps> = ({ onSavePrompt }) => {
             </div>
           ) : (
             <>
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="mr-2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
               {t('generator.generate')}
             </>
           )}
@@ -553,38 +547,42 @@ const GeneratorTab: React.FC<GeneratorTabProps> = ({ onSavePrompt }) => {
           onSave={handleInitiateSave}
           groundingChunks={formState.groundingChunks}
         />
-      </div>
 
       {/* Save Modal */}
       {isSaveModalOpen && (
-        <div className="absolute inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
-           <div className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-sm border border-gray-200 dark:border-slate-700 overflow-hidden transform transition-all scale-100 p-4">
-              <h3 className="text-sm font-bold text-gray-800 dark:text-gray-100 mb-3 flex items-center">
-                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 text-brand-600"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+        <div className="absolute inset-0 bg-black/40 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+           <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-sm border border-gray-200 dark:border-slate-700 overflow-hidden transform transition-all scale-100 p-5">
+              <h3 className="text-base font-bold text-gray-800 dark:text-gray-100 mb-1 flex items-center">
+                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 text-brand-600"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
                  Name your prompt
               </h3>
-              <input 
-                ref={saveInputRef}
-                type="text" 
-                value={saveName}
-                onChange={(e) => setSaveName(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleConfirmSave()}
-                placeholder="Enter a name..."
-                className="w-full text-sm p-2.5 bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-600 rounded-lg outline-none focus:ring-2 focus:ring-brand-500 mb-4 text-gray-900 dark:text-gray-100"
-              />
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">Give it a memorable name to find it later.</p>
+              
+              <div className="relative mb-5">
+                <input 
+                  ref={saveInputRef}
+                  type="text" 
+                  value={saveName}
+                  onChange={(e) => setSaveName(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleConfirmSave()}
+                  placeholder="Enter a name..."
+                  className="w-full text-sm p-3 bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-slate-600 rounded-xl outline-none focus:ring-2 focus:ring-brand-500 text-gray-900 dark:text-gray-100 transition-all placeholder-gray-400"
+                />
+              </div>
+
               <div className="flex space-x-3">
                  <button 
                     onClick={() => setIsSaveModalOpen(false)}
-                    className="flex-1 py-2 text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+                    className="flex-1 py-2.5 text-xs font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-xl transition-colors border border-transparent"
                  >
                     Cancel
                  </button>
                  <button 
                     onClick={handleConfirmSave}
                     disabled={!saveName.trim()}
-                    className="flex-1 py-2 text-xs font-bold text-white bg-brand-600 hover:bg-brand-700 rounded-lg transition-colors shadow-sm disabled:opacity-50"
+                    className="flex-1 py-2.5 text-xs font-bold text-white bg-brand-600 hover:bg-brand-700 rounded-xl transition-all shadow-lg shadow-brand-500/30 disabled:opacity-50 disabled:shadow-none"
                  >
-                    Save
+                    Save Prompt
                  </button>
               </div>
            </div>

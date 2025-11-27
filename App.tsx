@@ -232,7 +232,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="w-[400px] min-h-[550px] bg-white dark:bg-slate-900 mx-auto shadow-xl border border-gray-200 dark:border-slate-700 flex flex-col transition-colors duration-200">
+    <div className="w-[400px] min-h-[550px] bg-white dark:bg-slate-900 mx-auto shadow-xl border border-gray-200 dark:border-slate-700 flex flex-col transition-colors duration-200 relative overflow-hidden">
       <TutorialOverlay />
       
       {/* Hide the default mascot when tutorial is active, so the TutorialOverlay mascot can take over seamlessly */}
@@ -329,7 +329,7 @@ const App: React.FC = () => {
           {activeTab === TabEnum.HISTORY && (
             <HistoryList 
               items={history} 
-              onUpdate={updateHistoryItem}
+              onUpdate={updateHistoryItem} 
               onDelete={deleteHistoryItem}
               onLoadToRefiner={handleLoadToRefiner}
             />
@@ -346,7 +346,7 @@ const App: React.FC = () => {
       </main>
 
       {/* Footer / Status Bar */}
-      <footer className="bg-gray-50 dark:bg-slate-800 border-t border-gray-200 dark:border-slate-700 px-4 py-2 text-[10px] text-gray-400 dark:text-gray-500 flex justify-between shrink-0 transition-colors duration-200">
+      <footer className="bg-gray-50 dark:bg-slate-800 border-t border-gray-200 dark:border-slate-700 px-4 py-2 text-[10px] text-gray-400 dark:text-gray-500 flex justify-between shrink-0 transition-colors duration-200 relative z-20">
         <div className="flex items-center space-x-1">
           <div className={`w-1.5 h-1.5 rounded-full ${settings.privacyMode ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'}`}></div>
           <span>{settings.privacyMode ? t('common.privacyMode') : t('common.online')}</span>

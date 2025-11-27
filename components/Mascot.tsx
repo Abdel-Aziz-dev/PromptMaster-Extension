@@ -79,10 +79,11 @@ const Mascot: React.FC<MascotProps> = ({ customImage, tutorialProps }) => {
   // -- Render Helpers --
   const isTutorial = !!tutorialProps;
   
-  // Use passed style for tutorial, or fixed bottom-right for standard
+  // Use passed style for tutorial, or absolute bottom-right for standard
+  // Changed 'fixed' to 'absolute' to ensure it stays within the relative App container
   const containerStyle = isTutorial 
     ? { ...tutorialProps.style, zIndex: 10000 } 
-    : { bottom: '1.5rem', right: '1rem', position: 'fixed' as 'fixed', zIndex: 50 };
+    : { bottom: '1.5rem', right: '1rem', position: 'absolute' as 'absolute', zIndex: 50 };
 
   // In tutorial mode, bubble is always visible and contains tutorial content
   const bubbleVisible = isTutorial || isVisible;
@@ -91,7 +92,7 @@ const Mascot: React.FC<MascotProps> = ({ customImage, tutorialProps }) => {
 
   return (
     <div 
-      className={`flex flex-col items-end transition-all duration-500 ease-in-out pointer-events-none ${isTutorial ? 'absolute' : 'fixed'}`}
+      className={`flex flex-col items-end transition-all duration-500 ease-in-out pointer-events-none absolute`}
       style={containerStyle}
     >
       
